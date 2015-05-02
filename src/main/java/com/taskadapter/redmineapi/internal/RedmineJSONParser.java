@@ -707,26 +707,6 @@ public class RedmineJSONParser {
 		}
 	}
 
-	/**
-	 * Fetches an optional date from an object.
-	 * 
-	 * @param obj
-	 *            object to get a field from.
-	 * @param field
-	 *            field to get a value from.
-	 */
-	private static Date getShortDateOrNull(JSONObject obj, String field) throws JSONException {
-            final String dateStr = JsonInput.getStringOrNull(obj, field);
-            if (dateStr == null) {
-                return null;
-            }
-            try {
-                return RedmineDateUtils.parseDate(dateStr);
-            } catch (IllegalArgumentException e) {
-                throw new JSONException("Bad date " + dateStr);
-            }
-	}
-
 	public static JSONObject getResponseSingleObject(String body, String key) throws JSONException {
 		final JSONObject bodyJson = new JSONObject(body);
         return JsonInput.getObjectNotNull(bodyJson, key);
