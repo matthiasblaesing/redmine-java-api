@@ -18,6 +18,22 @@ package com.taskadapter.redmineapi;
 
 import com.taskadapter.redmineapi.internal.Transport;
 
+/**
+ * Wrapper to hold all manager classes.
+ * <p>Once you obtained an instance of RedmineManager, you can get references to all other xManagers:
+ * <pre>
+ RedmineManager redmineManager = RedmineManagerFactory.createWithUserAuth(redmineURI, login, password);
+ redmineManager.getIssueManager();
+ redmineManager.getUserManager();
+ ...etc...
+ * </pre>
+ *
+ * @see RedmineManagerFactory
+ * @see IssueManager
+ * @see UserManager
+ * @see AttachmentManager
+ * @see ProjectManager
+ */
 public class RedmineManager {
 
     private final Transport transport;
@@ -72,15 +88,9 @@ public class RedmineManager {
 
     /**
      * This number of objects (tasks, projects, users) will be requested from Redmine server in 1 request.
-     */
-    public int getObjectsPerPage() {
-		return transport.getObjectsPerPage();
-    }
-
-    // TODO add test
-
-    /**
-     * This number of objects (tasks, projects, users) will be requested from Redmine server in 1 request.
+     * Note that if you set objects per page to be, say, 10, and you have 20 objects on the server,
+     * then issueManager.getIssues() will still return ALL 20 objects at once even though the library
+     * will perform 2 requests to the server (to load 10 objects each time).
      */
     public void setObjectsPerPage(int pageSize) {
 		transport.setObjectsPerPage(pageSize);

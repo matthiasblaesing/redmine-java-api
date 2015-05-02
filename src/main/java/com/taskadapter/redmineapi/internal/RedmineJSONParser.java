@@ -1,7 +1,6 @@
 package com.taskadapter.redmineapi.internal;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -108,7 +107,7 @@ public class RedmineJSONParser {
 			return parseUser(input);
 		}
 	};
-	
+
 	public static final JsonObjectParser<Group> GROUP_PARSER = new JsonObjectParser<Group>() {
 		@Override
 		public Group parse(JSONObject input) throws JSONException {
@@ -136,7 +135,7 @@ public class RedmineJSONParser {
             return parseJournalDetail(input);
         }
     };
-    
+
 	public static final JsonObjectParser<Attachment> ATTACHMENT_PARSER = new JsonObjectParser<Attachment>() {
 		@Override
 		public Attachment parse(JSONObject input) throws JSONException {
@@ -237,7 +236,7 @@ public class RedmineJSONParser {
             return parseIssuePriority(input);
         }
     };
-    
+
     public static final JsonObjectParser<TimeEntryActivity> TIME_ENTRY_ACTIVITY_PARSER = new JsonObjectParser<TimeEntryActivity>() {
         @Override
         public TimeEntryActivity parse(JSONObject input) throws JSONException {
@@ -258,7 +257,7 @@ public class RedmineJSONParser {
             return parseWikiPageDetail(input);
         }
     };
-    
+
     public static final JsonObjectParser<CustomFieldDefinition> CUSTOM_FIELD_DEFINITION_PARSER = new JsonObjectParser<CustomFieldDefinition>() {
         @Override
         public CustomFieldDefinition parse(JSONObject input) throws JSONException {
@@ -268,7 +267,7 @@ public class RedmineJSONParser {
 
 	/**
 	 * Parses a tracker.
-	 * 
+	 *
 	 * @param object
 	 *            object to parse.
 	 * @return parsed tracker.
@@ -281,7 +280,7 @@ public class RedmineJSONParser {
 
 	/**
 	 * Parses a status.
-	 * 
+	 *
 	 * @param object
 	 *            object to parse.
 	 * @return parsed tracker.
@@ -354,7 +353,7 @@ public class RedmineJSONParser {
 		}
 		result.setHours(JsonInput.getFloatOrNull(object, "hours"));
 		result.setComment(JsonInput.getStringOrEmpty(object, "comments"));
-		result.setSpentOn(getShortDateOrNull(object, "spent_on"));
+		result.setSpentOn(getDateOrNull(object, "spent_on"));
 		result.setCreatedOn(getDateOrNull(object, "created_on"));
 		result.setUpdatedOn(getDateOrNull(object, "updated_on"));
 		return result;
@@ -362,7 +361,7 @@ public class RedmineJSONParser {
 
 	/**
 	 * Parses a "minimal" version of a project.
-	 * 
+	 *
 	 * @param content
 	 *            content to parse.
 	 * @return parsed project.
@@ -377,7 +376,7 @@ public class RedmineJSONParser {
 
 	/**
 	 * Parses a project.
-	 * 
+	 *
 	 * @param content
 	 *            content to parse.
 	 * @return parsed project.
@@ -429,8 +428,8 @@ public class RedmineJSONParser {
 				MINIMAL_PROJECT_PARSER));
 		result.setAuthor(JsonInput.getObjectOrNull(content, "author",
 				USER_PARSER));
-		result.setStartDate(getShortDateOrNull(content, "start_date"));
-		result.setDueDate(getShortDateOrNull(content, "due_date"));
+		result.setStartDate(getDateOrNull(content, "start_date"));
+		result.setDueDate(getDateOrNull(content, "due_date"));
 		result.setTracker(JsonInput.getObjectOrNull(content, "tracker",
 				TRACKER_PARSER));
 		result.setDescription(JsonInput
@@ -483,7 +482,7 @@ public class RedmineJSONParser {
 		result.setDescription(JsonInput.getStringOrNull(content, "description"));
 		result.setSharing(JsonInput.getStringOrNull(content, "sharing"));
 		result.setStatus(JsonInput.getStringOrNull(content, "status"));
-		result.setDueDate(getShortDateOrNull(content, "due_date"));
+		result.setDueDate(getDateOrNull(content, "due_date"));
 		result.setCreatedOn(getDateOrNull(content, "created_on"));
 		result.setUpdatedOn(getDateOrNull(content, "updated_on"));
 		result.addCustomFields(JsonInput.getListOrEmpty(content,
@@ -530,7 +529,7 @@ public class RedmineJSONParser {
                             JSONArray tmp = (JSONArray) value;
                             for (int i = 0; i < tmp.length(); i++) {
                                     strings.add(String.valueOf(tmp.get(i)));
-                            }   
+                            }
                         } else {
                             // Known issue: Under the condition:
                             // - issue is newly created
@@ -554,7 +553,7 @@ public class RedmineJSONParser {
 		result.addDetails(JsonInput.getListOrEmpty(content, "details", JOURNAL_DETAIL_PARSER));
 		return result;
 	}
-	
+
 	public static JournalDetail parseJournalDetail(JSONObject content) throws JSONException {
 	    final JournalDetail result = new JournalDetail();
 	    result.setNewValue(JsonInput.getStringOrNull(content, "new_value"));
@@ -563,7 +562,7 @@ public class RedmineJSONParser {
         result.setProperty(JsonInput.getStringOrNull(content, "property"));
         return result;
 	}
-	
+
 	public static Changeset parseChangeset(JSONObject content)
 			throws JSONException {
 		final Changeset result = new Changeset();
@@ -601,7 +600,7 @@ public class RedmineJSONParser {
 
 		return result;
 	}
-	
+
 	public static Group parseGroup(JSONObject content) throws JSONException {
 		final Group result = GroupFactory.create(JsonInput.getIntOrNull(content, "id"));
 		result.setName(JsonInput.getStringOrNull(content, "name"));
@@ -632,7 +631,7 @@ public class RedmineJSONParser {
 		result.addRoles(JsonInput.getListOrEmpty(content, "roles", ROLE_PARSER));
 		return result;
 	}
-	
+
     public static IssuePriority parseIssuePriority(JSONObject content)
             throws JSONException {
         final IssuePriority result = IssuePriorityFactory.create(JsonInput.getInt(content, "id"));
@@ -677,7 +676,7 @@ public class RedmineJSONParser {
 
         return wikiPage;
     }
-    
+
 	public static List<String> parseErrors(String responseBody) throws JSONException {
 		final JSONObject body = getResponse(responseBody);
 		final JSONArray errorsList = JsonInput.getArrayNotNull(body, "errors");
@@ -690,7 +689,7 @@ public class RedmineJSONParser {
 
 	/**
 	 * Fetches an optional date from an object.
-	 * 
+	 *
 	 * @param obj
 	 *            object to get a field from.
 	 * @param field
@@ -702,9 +701,9 @@ public class RedmineJSONParser {
                     return null;
                 }
 		try {
-			return RedmineDateUtils.parseDate(dateStr);
-		} catch (IllegalStateException e) {
-			throw new JSONException("Bad date value " + dateStr);
+			return RedmineDateParser.parse(dateStr);
+		} catch (ParseException e) {
+			throw new JSONException("Cannot parse this date: " + dateStr);
 		}
 	}
 
@@ -736,7 +735,7 @@ public class RedmineJSONParser {
 	public static JSONObject getResponse(String body) throws JSONException {
 		return new JSONObject(body);
 	}
-        
+
         public static CustomFieldDefinition parseCustomFieldDefinition(JSONObject content)
                 throws JSONException {
             final CustomFieldDefinition result = CustomFieldDefinitionFactory

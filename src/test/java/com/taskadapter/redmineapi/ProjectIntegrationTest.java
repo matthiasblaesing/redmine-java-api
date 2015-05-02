@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import static org.fest.assertions.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -27,13 +28,15 @@ public class ProjectIntegrationTest {
     private static RedmineManager mgr;
     private static ProjectManager projectManager;
     private static String projectKey;
+    private static Project project;
 
     @BeforeClass
     public static void oneTimeSetup() {
         mgr = IntegrationTestHelper.createRedmineManager();
         projectManager = mgr.getProjectManager();
         try {
-            projectKey = IntegrationTestHelper.createProject(mgr);
+            project = IntegrationTestHelper.createProject(mgr);
+            projectKey = project.getIdentifier();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -45,13 +48,24 @@ public class ProjectIntegrationTest {
     }
 
     @Test(expected = NotFoundException.class)
-    public void testGetProjectNonExistingId() throws RedmineException {
-        projectManager.getProjectByKey("some-non-existing-key");
+    public void testDeleteNonExistingProject() throws RedmineException {
+        projectManager.deleteProject("some-non-existing-key");
+    }
+
+    @Test
+    public void projectIsLoadedById() throws RedmineException {
+        final Project projectById = projectManager.getProjectById(project.getId());
+        assertThat(projectById.getName()).isEqualTo(project.getName());
     }
 
     @Test(expected = NotFoundException.class)
-    public void testDeleteNonExistingProject() throws RedmineException {
-        projectManager.deleteProject("some-non-existing-key");
+    public void requestingPojectNonExistingIdGivesNFE() throws RedmineException {
+        projectManager.getProjectById(999999999);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void requestingPojectNonExistingStrignKeyGivesNFE() throws RedmineException {
+        projectManager.getProjectByKey("some-non-existing-key");
     }
 
     /**
@@ -108,8 +122,6 @@ public class ProjectIntegrationTest {
                     trackers);
             assertTrue("checking that project has some trackers",
                     !(trackers.isEmpty()));
-        } catch (Exception e) {
-            fail(e.getMessage());
         } finally {
             if (key != null) {
                 projectManager.deleteProject(key);
@@ -198,22 +210,17 @@ public class ProjectIntegrationTest {
     // It will be included in Redmine 2.6.0 which isn't out yet.
     @Ignore
     @Test
-    public void testGetProjectsIncludesTrackers() {
-        try {
-            List<Project> projects = projectManager.getProjects();
-            assertTrue(projects.size() > 0);
-            Project p1 = projects.get(0);
-            assertNotNull(p1.getTrackers());
-            for (Project p : projects) {
-                if (!p.getTrackers().isEmpty()) {
-                    return;
-                }
+    public void testGetProjectsIncludesTrackers() throws RedmineException {
+        List<Project> projects = projectManager.getProjects();
+        assertTrue(projects.size() > 0);
+        Project p1 = projects.get(0);
+        assertNotNull(p1.getTrackers());
+        for (Project p : projects) {
+            if (!p.getTrackers().isEmpty()) {
+                return;
             }
-            fail("No projects with trackers found");
-        } catch (Exception e) {
-            e.printStackTrace();
-            Assert.fail(e.getMessage());
         }
+        fail("No projects with trackers found");
     }
 
     @Test

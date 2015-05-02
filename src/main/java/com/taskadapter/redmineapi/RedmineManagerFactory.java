@@ -29,7 +29,7 @@ import com.taskadapter.redmineapi.internal.comm.ConnectionEvictor;
 import com.taskadapter.redmineapi.internal.comm.naivessl.NaiveSSLFactory;
 
 /**
- * <b>Entry point</b> for the API: use this class to communicate with Redmine servers.
+ * <strong>Entry point</strong> for the API. Use this class to communicate with Redmine servers.
  * <p>
  * Collection of creation methods for the redmine. Method number may grow as
  * grows number of requirements. However, having all creation methods in one
@@ -37,6 +37,13 @@ import com.taskadapter.redmineapi.internal.comm.naivessl.NaiveSSLFactory;
  * external APIs. Moreover, we can create "named constructor" for redmine
  * instances. This will allow us to have many construction methods with the same
  * signature.
+ * <p>
+ * Sample usage:
+ * <pre>
+ RedmineManager redmineManager = RedmineManagerFactory.createWithUserAuth(redmineURI, login, password);
+ * </pre>
+ *
+ * @see RedmineManager
  */
 public final class RedmineManagerFactory {
     /**
@@ -75,7 +82,7 @@ public final class RedmineManagerFactory {
      * @param apiAccessKey Redmine API access key. It is shown on "My Account" /
      *                     "API access key" webpage (check
      *                     <i>http://redmine_server_url/my/account</i> URL). This
-     *                     parameter is <b>optional</b> (can be set to NULL) for Redmine
+     *                     parameter is <strong>optional</strong> (can be set to NULL) for Redmine
      *                     projects, which are "public".
      */
     public static RedmineManager createWithApiKey(String uri,
@@ -93,7 +100,7 @@ public final class RedmineManagerFactory {
      * @param apiAccessKey Redmine API access key. It is shown on "My Account" /
      *                     "API access key" webpage (check
      *                     <i>http://redmine_server_url/my/account</i> URL). This
-     *                     parameter is <b>optional</b> (can be set to NULL) for Redmine
+     *                     parameter is <strong>optional</strong> (can be set to NULL) for Redmine
      *                     projects, which are "public".
      * @param config       transport configuration.
      */

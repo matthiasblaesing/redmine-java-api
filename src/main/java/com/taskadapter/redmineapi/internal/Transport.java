@@ -282,8 +282,7 @@ public final class Transport {
 	 *             if something goes wrong.
 	 */
     public <T> void deleteChildId(Class<?> parentClass, String parentId, T object, Integer value) throws RedmineException {
-        URI uri = getURIConfigurator().getChildIdURI(parentClass,
-                parentId, object.getClass(), value);
+        URI uri = getURIConfigurator().getChildIdURI(parentClass, parentId, object.getClass(), value);
         HttpDelete httpDelete = new HttpDelete(uri);
         String response = send(httpDelete);
         logger.debug(response);
@@ -386,82 +385,104 @@ public final class Transport {
 	 *             the object with the given key is not found
 	 * @throws RedmineException
 	 */
-	public <T> T getObject(Class<T> classs, Integer key, NameValuePair... args)
-			throws RedmineException {
+	public <T> T getObject(Class<T> classs, Integer key, NameValuePair... args) throws RedmineException {
 		return getObject(classs, key.toString(), args);
 	}
 
-	public <T> List<T> getObjectsList(Class<T> objectClass,
-			NameValuePair... params) throws RedmineException {
+	public <T> List<T> getObjectsList(Class<T> objectClass, NameValuePair... params) throws RedmineException {
 		return getObjectsList(objectClass, Arrays.asList(params));
 	}
 
 	/**
-	 * Returns an object list.
+	 * Returns all objects found using the provided parameters.
+	 * This method IGNORES "limit" and "offset" parameters and handles paging AUTOMATICALLY for you.
+	 * Please use getObjectsListNoPaging() method if you want to control paging yourself with "limit" and "offset" parameters.
 	 * 
 	 * @return objects list, never NULL
+	 *
+	 * @see #getObjectsListNoPaging(Class, Collection)
 	 */
 	public <T> List<T> getObjectsList(Class<T> objectClass,
-			Collection<? extends NameValuePair> params) throws RedmineException {
-		final EntityConfig<T> config = getConfig(objectClass);
+									  Collection<? extends NameValuePair> params) throws RedmineException {
 		final List<T> result = new ArrayList<T>();
-
-		final List<NameValuePair> newParams = new ArrayList<NameValuePair>(
-				params);
-
-		newParams.add(new BasicNameValuePair("limit", String
-				.valueOf(objectsPerPage)));
 		int offset = 0;
 
-		int totalObjectsFoundOnServer;
+		Integer totalObjectsFoundOnServer;
 		do {
-			List<NameValuePair> paramsList = new ArrayList<NameValuePair>(
-					newParams);
-			paramsList.add(new BasicNameValuePair("offset", String
-					.valueOf(offset)));
+			final List<NameValuePair> newParams = new ArrayList<NameValuePair>(params);
+			newParams.add(new BasicNameValuePair("limit", String.valueOf(objectsPerPage)));
+			newParams.add(new BasicNameValuePair("offset", String.valueOf(offset)));
 
-			final URI uri = getURIConfigurator().getObjectsURI(objectClass,
-					paramsList);
+			final ResultsWrapper<T> wrapper = getObjectsListNoPaging(objectClass, newParams);
+			result.addAll(wrapper.getResults());
 
-			logger.debug(uri.toString());
-			final HttpGet http = new HttpGet(uri);
-			final String response = send(http);
-			logger.debug("received: " + response);
-
-			final List<T> foundItems;
-			try {
-				final JSONObject responseObject = RedmineJSONParser
-						.getResponse(response);
-				foundItems = JsonInput.getListOrNull(responseObject,
-						config.multiObjectName, config.parser);
-				result.addAll(foundItems);
-
-				/* Necessary for trackers */
-				if (!responseObject.has(KEY_TOTAL_COUNT)) {
-					break;
-				}
-				totalObjectsFoundOnServer = JsonInput.getInt(responseObject,
-						KEY_TOTAL_COUNT);
-			} catch (JSONException e) {
-				throw new RedmineFormatException(e);
-			}
-
-			if (foundItems.size() == 0) {
+			totalObjectsFoundOnServer = wrapper.getTotalFoundOnServer();
+			// Necessary for trackers.
+			// TODO Alexey: is this still necessary for Redmine 2.x?
+			if (totalObjectsFoundOnServer == null) {
 				break;
 			}
-
-			offset += foundItems.size();
+			if (!wrapper.hasSomeResults()) {
+				break;
+			}
+			offset += wrapper.getResultsNumber();
 		} while (offset < totalObjectsFoundOnServer);
-
 		return result;
 	}
 
 	/**
-	 * This number of objects (tasks, projects, users) will be requested from
-	 * Redmine server in 1 request.
+	 * Returns an object list. Provide your own "limit" and "offset" parameters if you need those, otherwise
+	 * this method will return the first page of some default size only (this default is controlled by
+	 * your Redmine configuration).
+	 *
+	 * @return objects list, never NULL
 	 */
-	public int getObjectsPerPage() {
-		return objectsPerPage;
+	public <T> ResultsWrapper<T> getObjectsListNoPaging(Class<T> objectClass,
+											  Collection<? extends NameValuePair> params) throws RedmineException {
+		final EntityConfig<T> config = getConfig(objectClass);
+		final List<NameValuePair> newParams = new ArrayList<NameValuePair>(params);
+		List<NameValuePair> paramsList = new ArrayList<NameValuePair>(newParams);
+		final URI uri = getURIConfigurator().getObjectsURI(objectClass, paramsList);
+		final HttpGet http = new HttpGet(uri);
+		final String response = send(http);
+		try {
+			final JSONObject responseObject = RedmineJSONParser.getResponse(response);
+			List<T> results = JsonInput.getListOrNull(responseObject, config.multiObjectName, config.parser);
+			Integer totalFoundOnServer = JsonInput.getIntOrNull(responseObject, KEY_TOTAL_COUNT);
+			return new ResultsWrapper<T>(totalFoundOnServer, results);
+		} catch (JSONException e) {
+			throw new RedmineFormatException(e);
+		}
+	}
+
+	public static class ResultsWrapper<T> {
+		final private Integer totalFoundOnServer;
+		final private List<T> results;
+
+		public ResultsWrapper(Integer totalFoundOnServer, List<T> results) {
+			this.totalFoundOnServer = totalFoundOnServer;
+			this.results = results;
+		}
+
+		public boolean hasSomeResults() {
+			return !results.isEmpty();
+		}
+
+		public List<T> getResults() {
+			return results;
+		}
+
+		public int getResultsNumber() {
+			return results.size();
+		}
+
+		public Integer getTotalFoundOnServer() {
+			return totalFoundOnServer;
+		}
+	}
+
+	public <T> List<T> getChildEntries(Class<?> parentClass, int parentId, Class<T> classs) throws RedmineException {
+		return getChildEntries(parentClass, parentId + "", classs);
 	}
 
 	/**
@@ -470,20 +491,17 @@ public final class Transport {
 	 * @param classs
 	 *            target class.
 	 */
-	public <T> List<T> getChildEntries(Class<?> parentClass, String parentId,
-			Class<T> classs) throws RedmineException {
+	public <T> List<T> getChildEntries(Class<?> parentClass, String parentKey, Class<T> classs) throws RedmineException {
 		final EntityConfig<T> config = getConfig(classs);
 		final URI uri = getURIConfigurator().getChildObjectsURI(parentClass,
-				parentId, classs, new BasicNameValuePair("limit", String
-						.valueOf(objectsPerPage)));
+				parentKey, classs, new BasicNameValuePair("limit", String.valueOf(objectsPerPage)));
 
 		HttpGet http = new HttpGet(uri);
 		String response = send(http);
 		final JSONObject responseObject;
 		try {
 			responseObject = RedmineJSONParser.getResponse(response);
-			return JsonInput.getListNotNull(responseObject,
-					config.multiObjectName, config.parser);
+			return JsonInput.getListNotNull(responseObject, config.multiObjectName, config.parser);
 		} catch (JSONException e) {
 			throw new RedmineFormatException("Bad categories response " + response, e);
 		}
@@ -508,8 +526,7 @@ public final class Transport {
 	 */
 	public void setObjectsPerPage(int pageSize) {
 		if (pageSize <= 0) {
-			throw new IllegalArgumentException(
-					"Page size must be >= 0. You provided: " + pageSize);
+			throw new IllegalArgumentException("Page size must be >= 0. You provided: " + pageSize);
 		}
 		this.objectsPerPage = pageSize;
 	}
