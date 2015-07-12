@@ -61,6 +61,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -593,7 +594,11 @@ public final class Transport {
 	private static void setEntity(HttpEntityEnclosingRequest request, String body, String contentType) {
 		StringEntity entity;
 		try {
-			entity = new StringEntity(body, CHARSET);
+                        try {
+                                entity = new StringEntity(body, CHARSET);
+                        } catch (UnsupportedCharsetException ex) {
+                                throw new UnsupportedEncodingException(ex.getCharsetName());
+                        }
 		} catch (UnsupportedEncodingException e) {
 			throw new RedmineInternalError("Required charset " + CHARSET
 					+ " is not supported", e);
