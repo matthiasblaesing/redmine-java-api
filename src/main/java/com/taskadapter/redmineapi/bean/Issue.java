@@ -7,7 +7,14 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Redmine's Issue
+ * Redmine's Issue.
+ * <p>
+ * Note that methods returning lists of elements (like getRelations(), getWatchers(), etc return
+ * unmodifiable collections.
+ * You need to use methods like addRelations() if you want to add elements, e.g.:
+ * <pre>
+ *     issue.addRelations(Collections.singletonList(relation));
+ * </pre>
  */
 public class Issue implements Identifiable {
     public static final String PROP_SUBJECT = "subject";
@@ -258,7 +265,7 @@ public class Issue implements Identifiable {
     }
 
     /**
-     * @return Custom Field objects. the collection may be empty, but it is never NULL.
+     * @return unmodifiable collection of Custom Field objects. the collection may be empty, but it is never NULL.
      */
     public Collection<CustomField> getCustomFields() {
         return Collections.unmodifiableCollection(customFields);
@@ -301,7 +308,7 @@ public class Issue implements Identifiable {
      * <pre>
      *     Issue issue = issueManager.getIssueById(3205, Include.journals);
      * </pre>
-     * @return Collection of Journal entries or empty collection if no objects found.
+     * @return unmodifiable collection of Journal entries or empty collection if no objects found. Never NULL.
      * @see com.taskadapter.redmineapi.Include#journals
      */
     public Collection<Journal> getJournals() {
@@ -317,7 +324,7 @@ public class Issue implements Identifiable {
      * <pre>
      *     Issue issue = issueManager.getIssueById(3205, Include.changesets);
      * </pre>
-     * @return Collection of entries or empty collection if no objects found.
+     * @return unmodifiable collection of entries or empty collection if no objects found.
      * @see com.taskadapter.redmineapi.Include#changesets
      */
     public Collection<Changeset> getChangesets() {
@@ -333,7 +340,7 @@ public class Issue implements Identifiable {
      * <pre>
      *     Issue issue = issueManager.getIssueById(3205, Include.watchers);
      * </pre>
-     * @return Collection of entries or empty collection if no objects found.
+     * @return unmodifiable collection of entries or empty collection if no objects found.
      * @see com.taskadapter.redmineapi.Include#watchers
      */
     public Collection<Watcher> getWatchers() {
@@ -412,11 +419,16 @@ public class Issue implements Identifiable {
     }
 
     /**
-     * Relations are only loaded if you include INCLUDE.relations when loading the Issue.
+     * Relations are only loaded if you include Include.relations when loading the Issue.
      * <pre>
      *     Issue issue = issueManager.getIssueById(3205, Include.relations);
      * </pre>
-     * @return relations or EMPTY collection if no relations, never returns NULL
+     * <p>Since the returned collection is not modifiable, you need to use addRelations() method
+     * if you want to add elements, e.g.:
+     * <pre>
+     *     issue.addRelations(Collections.singletonList(relation));
+     * </pre>
+     * @return unmodifiable collection of Relations or EMPTY collection if none found. Never returns NULL.
      * @see com.taskadapter.redmineapi.Include#relations
      */
     public Collection<IssueRelation> getRelations() {
@@ -445,7 +457,7 @@ public class Issue implements Identifiable {
      * <pre>
      *     Issue issue = issueManager.getIssueById(3205, Include.attachments);
      * </pre>
-     * @return Collection of entries or empty collection if no objects found.
+     * @return unmodifiable collection of entries or empty collection if no objects found.
      * @see com.taskadapter.redmineapi.Include#attachments
      */
     public Collection<Attachment> getAttachments() {

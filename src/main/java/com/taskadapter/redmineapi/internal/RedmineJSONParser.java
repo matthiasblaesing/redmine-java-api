@@ -209,13 +209,6 @@ public class RedmineJSONParser {
 		}
 	};
 
-	public static final JsonObjectParser<String> ERROR_PARSER = new JsonObjectParser<String>() {
-		@Override
-		public String parse(JSONObject input) throws JSONException {
-			return input.toString();
-		}
-	};
-
 	public static final JsonObjectParser<Changeset> CHANGESET_PARSER = new JsonObjectParser<Changeset>() {
 		@Override
 		public Changeset parse(JSONObject input) throws JSONException {
@@ -628,6 +621,7 @@ public class RedmineJSONParser {
 		result.setProject(JsonInput.getObjectOrNull(content, "project",
 				MINIMAL_PROJECT_PARSER));
 		result.setUser(JsonInput.getObjectOrNull(content, "user", USER_PARSER));
+                result.setGroup(JsonInput.getObjectOrNull(content, "group", GROUP_PARSER));
 		result.addRoles(JsonInput.getListOrEmpty(content, "roles", ROLE_PARSER));
 		return result;
 	}

@@ -1,5 +1,8 @@
 package com.taskadapter.redmineapi;
 
+import com.taskadapter.redmineapi.bean.CustomField;
+import com.taskadapter.redmineapi.bean.CustomFieldDefinition;
+import com.taskadapter.redmineapi.bean.CustomFieldFactory;
 import com.taskadapter.redmineapi.bean.Project;
 import com.taskadapter.redmineapi.bean.ProjectFactory;
 import com.taskadapter.redmineapi.bean.Tracker;
@@ -12,12 +15,14 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import static com.taskadapter.redmineapi.CustomFieldResolver.getCustomFieldByName;
 import static org.fest.assertions.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -287,6 +292,32 @@ public class ProjectIntegrationTest {
         } finally {
             if (createdMainProject != null) {
                 projectManager.deleteProject(createdMainProject.getIdentifier());
+            }
+        }
+    }
+
+    /**
+     * This test requires a project custom field called "custom_project_field_1" to already exist on the server.
+     * cannot create custom fields in Redmine programmatically - no support in its REST API.
+     * See feature request http://www.redmine.org/issues/9664
+     */
+    @Test
+    public void projectIsCreatedWithCustomField() throws RedmineException {
+        List<CustomFieldDefinition> customFieldDefinitions = mgr.getCustomFieldManager().getCustomFieldDefinitions();
+        CustomFieldDefinition customFieldDefinition = getCustomFieldByName(customFieldDefinitions, "custom_project_field_1");
+        final Integer fieldId = customFieldDefinition.getId();
+        final CustomField customField = CustomFieldFactory.create(fieldId);
+        customField.setValue("value1");
+        final Project project = generateRandomProject();
+        project.setName("project-with-custom-field");
+        Project createdProject = null;
+        try {
+            project.addCustomFields(Arrays.asList(customField));
+            createdProject = projectManager.createProject(project);
+            assertThat(createdProject.getCustomFieldById(fieldId).getValue()).isEqualTo("value1");
+        } finally {
+            if (createdProject != null) {
+                projectManager.deleteProject(createdProject.getIdentifier());
             }
         }
     }
