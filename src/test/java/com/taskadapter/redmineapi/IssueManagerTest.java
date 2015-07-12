@@ -186,8 +186,8 @@ public class IssueManagerTest {
    @Test
     public void issueClearParent() {
         try {
-            Issue parentIssue = IssueFactory.createWithSubject("parent 1");
-            Issue newParentIssue = issueManager.createIssue(projectKey, parentIssue);
+            Issue parentIssue = IssueFactory.create(projectId, "parent 1");
+            Issue newParentIssue = issueManager.createIssue(parentIssue);
 
             assertNotNull("Checking parent was created", newParentIssue);
             assertNotNull("Checking ID of parent issue is not null",
@@ -195,10 +195,10 @@ public class IssueManagerTest {
 
             Integer parentId = newParentIssue.getId();
 
-            Issue childIssue = IssueFactory.createWithSubject("child 1");
+            Issue childIssue = IssueFactory.create(projectId, "child 1");
             childIssue.setParentId(parentId);
 
-            Issue newChildIssue = issueManager.createIssue(projectKey, childIssue);
+            Issue newChildIssue = issueManager.createIssue(childIssue);
 
             assertEquals("Checking parent ID of the child issue",
                     parentId, newChildIssue.getParentId());
